@@ -19,16 +19,27 @@ if __name__ == "__main__":
 	block_size = int(sys.argv[cur_argc])
 	cur_argc += 1 
 	is_global = block_size < 0
+	write_to_file = False
 	if not is_global:
 		shift = int(sys.argv[cur_argc])
 		cur_argc += 1 
-		output_prefix = sys.argv[cur_argc]
-		cur_argc += 1 
+		if len(sys.argv) > cur_argc:
+			write_to_file = True 
+			output_prefix = sys.argv[cur_argc]
+			cur_argc += 1 
 
 	ori_data = np.fromfile(ori_data_path, dtype = datatype).reshape(dims)
 	dec_data = np.fromfile(decomp_data_path, dtype = datatype).reshape(dims)
 
-	def calc_stats(ori, dec):
+	def calc_stats_single(dat):
+		mx = np.max(dat)
+		mi = np.min(dat)
+		mean = np.mean(dat)
+		var = np.var(dat)
+		std = np.sqrt(var)
+		return mx, mi, mean, var, std
+
+	def calc_stats_compare(ori, dec):
 		mu_o = np.mean(ori)
 		mu_d = np.mean(dec)
 		var_o = np.var(ori)
@@ -61,14 +72,14 @@ if __name__ == "__main__":
 
 	if is_global:
 
-		mu_o, mu_d, var_o, var_d, var_e, std_o, std_d, std_e, mu_err, var_err, std_err = calc_stats(ori_data, dec_data)
+		mu_o, mu_d, var_o, var_d, var_e, std_o, std_d, std_e, mu_err, var_err, std_err = calc_stats_compare(ori_data, dec_data)
 
 		print("Global Stats:")
 		print("Error bound: %.20g" % np.max(np.abs(ori_data - dec_data)))
 		print("Ori mean value: %.20g, Dec mean value: %.20g, Error of mean value: %.20g" % (mu_o, mu_d, mu_err))
 		print("Ori variance: %.20g, Dec variance: %.20g, Error of variance: %.20g, Variance of error: %.20g" % (var_o, var_d, var_err, var_e))
 		print("Ori standard derivation: %.20g, Dec standard derivation: %.20g, Error of standard derivation: %.20g, Standard derivation of error: %.20g" % (std_o, std_d, std_err, std_e))
-		#print(np.mean((ori_data-dec_data)**2), var_e + mu_err*mu_err)
+		print("RMSE: %.20g" % np.sqrt(var_e + mu_err**2))
 
 	else:
 		ndim = ori_data.ndim
@@ -81,22 +92,31 @@ if __name__ == "__main__":
 
 		mu_errs = np.zeros(num_blocks, dtype = np.double)
 		var_errs = np.zeros(num_blocks, dtype = np.double)
-		#err_vars = np.zeros(num_blocks, dtype = np.double)
+		err_vars = np.zeros(num_blocks, dtype = np.double)
 		std_errs = np.zeros(num_blocks, dtype = np.double)
 		err_stds = np.zeros(num_blocks, dtype = np.double)
 		idx = 0
 		for ori_block, dec_block in iter_blocks(ori_data, dec_data, block_size, shift):
-			mu_o, mu_d, var_o, var_d, var_e, std_o, std_d, std_e, mu_err, var_err, std_err = calc_stats(ori_block, dec_block)
+			mu_o, mu_d, var_o, var_d, var_e, std_o, std_d, std_e, mu_err, var_err, std_err = calc_stats_compare(ori_block, dec_block)
 			mu_errs[idx] = mu_err
 			var_errs[idx] = var_err
 			std_errs[idx] = std_err 
-			#err_vars[idx] = var_e
+			err_vars[idx] = var_e
 			err_stds[idx] = std_e 
 			idx += 1
-
-		mu_errs.tofile(output_prefix+".mean_errs")
-		var_errs.tofile(output_prefix+".var_errs")
-		std_errs.tofile(output_prefix+".std_errs")
-		#err_vars.tofile(output_prefix+".err_vars")
-		err_stds.tofile(output_prefix+".err_stds")
-		print("%d block stats written to file." % num_blocks)
+		rmses = np.sqrt(err_vars + mu_errs**2)
+		print("Global error bound: %.20g" % np.max(np.abs(ori_data-dec_data)))
+		print("On blocks of side length %d and shift length %d:" % (block_size, shift))
+		print("Errors of mean values: max value: %.20g, min value: %.20g, mean value: %.20g, variance: %.20g, standard derivation: %.20g" % calc_stats_single(mu_errs) )
+		print("Errors of variance: max value: %.20g, min value: %.20g, mean value: %.20g, variance: %.20g, standard derivation: %.20g" % calc_stats_single(var_errs) )
+		print("Errors of standard derivation: max value: %.20g, min value: %.20g, mean value: %.20g, variance: %.20g, standard derivation: %.20g" % calc_stats_single(std_errs) )
+		print("Variances of errors: max value: %.20g, min value: %.20g, mean value: %.20g, variance: %.20g, standard derivation: %.20g" % calc_stats_single(err_vars) )
+		print("Standard derivations of errors: max value: %.20g, min value: %.20g, mean value: %.20g, variance: %.20g, standard derivation: %.20g" % calc_stats_single(err_stds) )
+		print("RMSE on blocks: max value: %.20g, min value: %.20g, mean value: %.20g, variance: %.20g, standard derivation: %.20g" % calc_stats_single(rmses) )
+		if write_to_file:
+			mu_errs.tofile(output_prefix+".mean_errs")
+			var_errs.tofile(output_prefix+".var_errs")
+			std_errs.tofile(output_prefix+".std_errs")
+			#err_vars.tofile(output_prefix+".err_vars")
+			err_stds.tofile(output_prefix+".err_stds")
+			print("%d block stats written to file." % num_blocks)
