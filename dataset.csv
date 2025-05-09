@@ -1,0 +1,10 @@
+Name,Format,Dim,Per-file size (slowest first),Num of files,Path (on Ragnaros),suffix,Comments
+HACC,Float,1D,280958367,6,/data_disk/Datasets/HACC_281M,.f32,
+Hurricane,Float,3D ,100x500x500,13,/data_disk/Datasets/Hurricane,.f32,
+QMCPack,Float,4D,288x115x69x69,1,/data_disk/Datasets/QMCPack/288x115x69x69,.f32,need also try compressing it in 3D style (33120x69x69). Some compressors (like SPERR) do not support 4D compression.
+CESM-ATM,Float,2D,1800x3600,77,/data_disk/Datasets/SDRBENCH-CESM-ATM-cleared-1800x3600,.dat,
+NYX,Float,3D ,512x512x512,6,/data_disk/Datasets/SDRBENCH-EXASKY-NYX-512x512x512,.f32,
+Miranda,Double,3D ,256x384x384,7,/data_disk/Datasets/SDRBENCH-Miranda-256x384x384,.d64,There are also .f32 datafiles. Should only test on .d64 data
+S3D,Double,3D ,500x500x500,11,/data_disk/Datasets/SDRBENCH-S3D,.d64,"Some more d64 files in the ""more"" subfolder. Not needed to work on them"
+Scale,Float,3D ,98x1200x1200,12,/data_disk/Datasets/SDRBENCH-SCALE_98x1200x1200,.f32,The full name is Scale-LetKF
+,,,Use the reversed order in commands,,,only compress the files with those suffices,
