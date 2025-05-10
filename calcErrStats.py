@@ -76,9 +76,9 @@ if __name__ == "__main__":
 
 		print("Global Stats:")
 		print("Error bound: %.20g" % np.max(np.abs(ori_data - dec_data)))
-		print("Ori mean value: %.20g, Dec mean value: %.20g, Error of mean value: %.20g" % (mu_o, mu_d, mu_err))
-		print("Ori variance: %.20g, Dec variance: %.20g, Error of variance: %.20g, Variance of error: %.20g" % (var_o, var_d, var_err, var_e))
-		print("Ori standard derivation: %.20g, Dec standard derivation: %.20g, Error of standard derivation: %.20g, Standard derivation of error: %.20g" % (std_o, std_d, std_err, std_e))
+		print("Ori mean value: %.20g, Dec mean value: %.20g, Error of mean value: %.20g" % (mu_o, mu_d, np.abs(mu_err)))
+		print("Ori variance: %.20g, Dec variance: %.20g, Error of variance: %.20g, Variance of error: %.20g" % (var_o, var_d, np.abs(var_err), var_e))
+		print("Ori standard derivation: %.20g, Dec standard derivation: %.20g, Error of standard derivation: %.20g, Standard derivation of error: %.20g" % (std_o, std_d, np.abs(std_err), std_e))
 		print("RMSE: %.20g" % np.sqrt(var_e + mu_err**2))
 
 	else:
